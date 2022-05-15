@@ -12,17 +12,17 @@ var (
 	UseProtcol                    = "tcp4"
 	//使用するプロトコル
 	ServerLocalAddress            = "localhost:25564"
-  // 実際のサーバーへアクセスするアドレス
+	// 実際のサーバーへアクセスするアドレス
 	ProxyGlobalAddress            = "example.com:25200"
-  // プロキシと鯖を繋げる際に使うアドレス
-  // ポートはProxyListenと一緒, ClientListenと違うこと
+	// プロキシと鯖を繋げる際に使うアドレス
+	// ポートはProxyListenと一緒, ClientListenと違うこと
 	ProxyListen                   = ":25200"
-  // プロキシがListenするポート
-  // 注意はProxyGlobalAddress参照
+	// プロキシがListenするポート
+	// 注意はProxyGlobalAddress参照
 	ClientListen                  = ":25300"
-  // クライアントがアクセスした際のポート
+	// クライアントがアクセスした際のポート
 	BootServer         ServerType = Server
-  // 以下の変数が指定可能
+	// 以下の変数が指定可能
 )
 var (
 	Server ServerType = 1
