@@ -15,12 +15,10 @@ var (
 	// 実際のサーバーへアクセスするアドレス
 	ProxyGlobalAddress            = "example.com:25200"
 	// プロキシと鯖を繋げる際に使うアドレス
-	// ポートはProxyListenと一緒, ClientListenと違うこと
 	ProxyListen                   = ":25200"
 	// プロキシがListenするポート
-	// 注意はProxyGlobalAddress参照
 	ClientListen                  = ":25300"
-	// クライアントがアクセスした際のポート
+	// クライアントがアクセスする際のポート
 	BootServer         ServerType = Server
 	// 以下の変数が指定可能
 )
