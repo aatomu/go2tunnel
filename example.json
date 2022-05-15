@@ -1,0 +1,8 @@
+{
+  "UseProtcol":"tcp4",
+  "ServerLocalAddress":"localhost:25565",
+  "ProxyGlobalAddress":"example.com:80",
+  "ProxyListen":":80",
+  "ClientListen":":80",
+  "BootServer": "Server"
+}

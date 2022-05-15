@@ -1,42 +1,42 @@
 package main
 
 import (
+	"encoding/json"
+	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net"
 	"time"
 )
 
-var (
-	UseProtcol                    = "tcp4"
-	ServerLocalAddress            = "localhost:25564"
-	ProxyGlobalAddress            = "atomic.f5.si:25200"
-	ProxyListen                   = ":25200"
-	ClientListen                  = ":25300"
-	BootServer         ServerType = Server
-)
-
-type ServerType int8
-
-var (
-	Server ServerType = 1
-	Proxy  ServerType = 2
-	//Client ServerType = 3
-)
+type Settings struct {
+	UseProtcol         string `json:"settings.UseProtcol"`
+	ServerLocalAddress string `json:"ServerLocalAddress"`
+	ProxyGlobalAddress string `json:"ProxyGlobalAddress"`
+	ProxyListen        string `json:"ProxyListen"`
+	ClientListen       string `json:"ClientListen"`
+	BootServer         string `json:"BootServer"`
+}
 
 func main() {
+	path := flag.String("env", "./example.json", "flags")
+	flag.Parse()
+	byteArray, _ := ioutil.ReadFile(*path)
+	var settings Settings
+	json.Unmarshal(byteArray, &settings)
 	// 鯖ごとに分岐
-	switch BootServer {
-	case Server:
+	switch settings.BootServer {
+	case "Server":
 		// 複数 Session 生成できるように Loop
 		for {
 			// ProxyとのSesison作成
 			PrintInfo("Dial Up to Proxy")
-			proxy, err := net.Dial(UseProtcol, ProxyGlobalAddress)
+			proxy, err := net.Dial(settings.UseProtcol, settings.ProxyGlobalAddress)
 			ErrorCheck("Proxy", err)
 			// ServerとのSesison作成
 			PrintInfo("Dial Up to Server")
-			server, err := net.Dial(UseProtcol, ServerLocalAddress)
+			server, err := net.Dial(settings.UseProtcol, settings.ServerLocalAddress)
 			ErrorCheck("Server", err)
 			// Sessionが使われるまで待機
 			for {
@@ -50,13 +50,13 @@ func main() {
 			go copyIO(proxy, server)
 			go copyIO(server, proxy)
 		}
-	case Proxy:
+	case "Proxy":
 		// ServerからのSesison Trigger 作成
-		server, err := net.Listen(UseProtcol, ProxyListen)
+		server, err := net.Listen(settings.UseProtcol, settings.ProxyListen)
 		ErrorCheck("Server", err)
 		PrintInfo("Listen Server Session Request")
 		// ClientからのSession Trigger 作成
-		client, err := net.Listen(UseProtcol, ClientListen)
+		client, err := net.Listen(settings.UseProtcol, settings.ClientListen)
 		ErrorCheck("Client", err)
 		PrintInfo("Listen Client Session Request")
 		// 複数 Session 生成できるように Loop

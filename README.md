@@ -2,27 +2,24 @@
 開発環境 : go version go1.17.8 linux/arm64 raspi4 8GB  
 
 ## how to use
-1. main.goをProxy modeで起動
-2. main.goをServer modeで起動
+1. go run main.go -env="???.json" で "BootServer":"Proxy" で起動  
+2. go run main.go -env="???.json" で "BootServer":"Server" で起動  
 この順番で起動すればPort開放がいらないはず?
 
+
 ## 変数 について
-```golang
-var (
-	UseProtcol                    = "tcp4"
-	//使用するプロトコル
-	ServerLocalAddress            = "localhost:25564"
-	// 実際のサーバーへアクセスするアドレス
-	ProxyGlobalAddress            = "example.com:25200"
-	// プロキシと鯖を繋げる際に使うアドレス
-	ProxyListen                   = ":25200"
-	// プロキシがListenするポート
-	ClientListen                  = ":25300"
-	// クライアントがアクセスする際のポート
-	BootServer         ServerType = Server
-	// 以下の変数が指定可能
-)
-var (
-	Server ServerType = 1
-	Proxy  ServerType = 2
-)```
+```json
+{
+  "comment":"使用するプロトコル",
+  "UseProtcol":"tcp4", 
+  "comment":" 実際のサーバーへアクセスするアドレス",
+  "ServerLocalAddress":"localhost:25565",
+  "comment":" プロキシと鯖を繋げる際に使うアドレス",
+  "ProxyGlobalAddress":"example.com:80",
+  "comment":" プロキシがListenするポート,ClientListenと異なること",
+  "ProxyListen":":80",
+  "comment":" クライアントがアクセスする際のポート,ProxyListenと異なること",
+  "ClientListen":":22",
+  "comment":"ServerなのかProxyなのかを指定",
+  "BootServer": "Server"
+}```
