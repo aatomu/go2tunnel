@@ -11,7 +11,7 @@ import (
 )
 
 type Settings struct {
-	UseProtcol         string `json:"settings.UseProtcol"`
+	UseProtcol         string `json:"UseProtcol"`
 	ServerLocalAddress string `json:"ServerLocalAddress"`
 	ProxyGlobalAddress string `json:"ProxyGlobalAddress"`
 	ProxyListen        string `json:"ProxyListen"`
