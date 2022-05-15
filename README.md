@@ -22,4 +22,5 @@
   "ClientListen":":22",
   "comment":"ServerなのかProxyなのかを指定",
   "BootServer": "Server"
-}```
+}
+```
