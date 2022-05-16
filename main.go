@@ -56,7 +56,7 @@ func main() {
 			}
 			// Sessionが使われるまで待機
 			for {
-				buf := make([]byte, 128)
+				buf := make([]byte, 8)
 				n, err := proxyConn.Read(buf)
 				if string(buf[:n]) == "Next" || err == io.EOF {
 					break
