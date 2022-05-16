@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net"
 	"time"
 )
@@ -28,16 +29,28 @@ func main() {
 	// 鯖ごとに分岐
 	switch settings.BootServer {
 	case "Server":
+		var err error
 		// 複数 Session 生成できるように Loop
 		for {
+			var proxyConn, serverConn net.Conn
 			// ProxyとのSesison作成
-			PrintInfo(fmt.Sprintf("Dial Up to Proxy: \"%s\"", settings.ProxyGlobalAddress))
-			proxyConn, err := net.Dial(settings.UseProtcol, settings.ProxyGlobalAddress)
-			ErrorCheck("Proxy", err)
+			for {
+				PrintInfo(fmt.Sprintf("Dial Up to Proxy: \"%s\"", settings.ProxyGlobalAddress))
+				proxyConn, err = net.Dial(settings.UseProtcol, settings.ProxyGlobalAddress)
+				if !ErrorCheck("Proxy", err) {
+					break
+				}
+				time.Sleep(1 * time.Second)
+			}
 			// ServerとのSesison作成
-			PrintInfo(fmt.Sprintf("Dial Up to Server: \"%s\"", settings.ServerLocalAddress))
-			serverConn, err := net.Dial(settings.UseProtcol, settings.ServerLocalAddress)
-			ErrorCheck("Server", err)
+			for {
+				PrintInfo(fmt.Sprintf("Dial Up to Server: \"%s\"", settings.ServerLocalAddress))
+				serverConn, err = net.Dial(settings.UseProtcol, settings.ServerLocalAddress)
+				if !ErrorCheck("Server", err) {
+					break
+				}
+				time.Sleep(1 * time.Second)
+			}
 			// Sessionが使われるまで待機
 			for {
 				buf := make([]byte, 128)
@@ -91,12 +104,14 @@ func copyIO(src, dest net.Conn) {
 	io.Copy(src, dest)
 }
 
-func ErrorCheck(host string, err error) {
+func ErrorCheck(host string, err error) (ok bool) {
 	if err != nil {
-		fmt.Printf("[ERROR]: <%s> %s\n", host, err.Error())
+		log.Printf("[ERROR]: <%s> %s\n", host, err.Error())
+		return false
 	}
+	return true
 }
 
 func PrintInfo(message string) {
-	fmt.Printf("[INFO]: %s\n", message)
+	log.Printf("[INFO]: %s\n", message)
 }
