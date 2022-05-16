@@ -10,7 +10,7 @@
 ## 変数 について
 ```json
 {
-  "comment":"使用するプロトコル",
+  "comment":"使用するプロトコル tcp,tcp4,tcp6のみ",
   "UseProtcol":"tcp4", 
   "comment":" 実際のサーバーへアクセスするアドレス",
   "ServerLocalAddress":"localhost:25565",
