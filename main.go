@@ -20,11 +20,14 @@ type Settings struct {
 	BootServer         string `json:"BootServer"`
 }
 
+var (
+	path     = flag.String("env", "./example.json", "flags")
+	settings Settings
+)
+
 func main() {
-	path := flag.String("env", "./example.json", "flags")
 	flag.Parse()
 	byteArray, _ := ioutil.ReadFile(*path)
-	var settings Settings
 	json.Unmarshal(byteArray, &settings)
 	// 鯖ごとに分岐
 	switch settings.BootServer {
@@ -99,8 +102,16 @@ func main() {
 }
 
 func copyIO(src, dest net.Conn) {
-	defer src.Close()
-	defer dest.Close()
+	defer func() {
+		err := src.Close()
+		if err != nil {
+			PrintInfo(fmt.Sprintf("Session Closed: \"%s\"", src.RemoteAddr()))
+		}
+		err = dest.Close()
+		if err != nil {
+			PrintInfo(fmt.Sprintf("Session Closed: \"%s\"", src.RemoteAddr()))
+		}
+	}()
 	io.Copy(src, dest)
 }
 
