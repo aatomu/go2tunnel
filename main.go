@@ -109,7 +109,7 @@ func copyIO(src, dest net.Conn) {
 		}
 		err = dest.Close()
 		if err != nil {
-			PrintInfo(fmt.Sprintf("Session Closed: \"%s\"", src.RemoteAddr()))
+			PrintInfo(fmt.Sprintf("Session Closed: \"%s\"", dest.RemoteAddr()))
 		}
 	}()
 	io.Copy(src, dest)
