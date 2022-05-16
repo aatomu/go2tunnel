@@ -4,8 +4,7 @@
 ## how to use
 1. go run main.go -env="???.json" で "BootServer":"Proxy" で起動  
 2. go run main.go -env="???.json" で "BootServer":"Server" で起動  
-この順番で起動すればPort開放がいらないはず?
-
+Server Proxy どっちを先に起動しても問題なし
 
 ## 変数 について
 ```json
