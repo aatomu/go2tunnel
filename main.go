@@ -31,11 +31,11 @@ func main() {
 		// 複数 Session 生成できるように Loop
 		for {
 			// ProxyとのSesison作成
-			PrintInfo("Dial Up to Proxy")
+			PrintInfo(fmt.Sprintf("Dial Up to Proxy: \"%s\"", settings.ProxyGlobalAddress))
 			proxy, err := net.Dial(settings.UseProtcol, settings.ProxyGlobalAddress)
 			ErrorCheck("Proxy", err)
 			// ServerとのSesison作成
-			PrintInfo("Dial Up to Server")
+			PrintInfo(fmt.Sprintf("Dial Up to Server: \"%s\"", settings.ServerLocalAddress))
 			server, err := net.Dial(settings.UseProtcol, settings.ServerLocalAddress)
 			ErrorCheck("Server", err)
 			// Sessionが使われるまで待機
@@ -54,26 +54,27 @@ func main() {
 		// ServerからのSesison Trigger 作成
 		server, err := net.Listen(settings.UseProtcol, settings.ProxyListen)
 		ErrorCheck("Server", err)
-		PrintInfo("Listen Server Session Request")
+		PrintInfo(fmt.Sprintf("Listen Server Session: \"%s\"", settings.ProxyListen))
 		// ClientからのSession Trigger 作成
 		client, err := net.Listen(settings.UseProtcol, settings.ClientListen)
 		ErrorCheck("Client", err)
-		PrintInfo("Listen Client Session Request")
+		PrintInfo(fmt.Sprintf("Listen Client Session: \"%s\"", settings.ClientListen))
 		// 複数 Session 生成できるように Loop
 		for {
 			// Server との Session を待機
 			serverConn, err := server.Accept()
 			ErrorCheck("Server", err)
-			PrintInfo("Connected Server")
+			PrintInfo(fmt.Sprintf("Connected Server: \"%s\"", serverConn.RemoteAddr()))
 			// Client との Session を待機
 			clientConn, err := client.Accept()
 			ErrorCheck("Client", err)
-			PrintInfo("Connected Client")
+			PrintInfo(fmt.Sprintf("Connected Client: \"%s\"", clientConn.RemoteAddr()))
 			// Session を使ったことを通知
 			serverConn.Write([]byte("Next"))
-			PrintInfo("Sended Use Session Info To Server")
+			PrintInfo("Request New Session From Server")
 			time.Sleep(1 * time.Second)
 			// Client Session <=> Server Session を接続
+			PrintInfo(fmt.Sprintf("Connect Session %s <=> %s", serverConn.RemoteAddr(), clientConn.RemoteAddr()))
 			go copyIO(serverConn, clientConn)
 			go copyIO(clientConn, serverConn)
 		}
