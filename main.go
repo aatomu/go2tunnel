@@ -52,7 +52,7 @@ func main() {
 				if !isError("Server", err) {
 					break
 				}
-				time.Sleep(1 * time.Second)
+				time.Sleep(5 * time.Second)
 			}
 			// Sessionが使われるまで待機
 			for {
