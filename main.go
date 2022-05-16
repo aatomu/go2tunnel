@@ -32,23 +32,27 @@ func main() {
 		for {
 			// ProxyとのSesison作成
 			PrintInfo(fmt.Sprintf("Dial Up to Proxy: \"%s\"", settings.ProxyGlobalAddress))
-			proxy, err := net.Dial(settings.UseProtcol, settings.ProxyGlobalAddress)
+			proxyConn, err := net.Dial(settings.UseProtcol, settings.ProxyGlobalAddress)
 			ErrorCheck("Proxy", err)
 			// ServerとのSesison作成
 			PrintInfo(fmt.Sprintf("Dial Up to Server: \"%s\"", settings.ServerLocalAddress))
-			server, err := net.Dial(settings.UseProtcol, settings.ServerLocalAddress)
+			serverConn, err := net.Dial(settings.UseProtcol, settings.ServerLocalAddress)
 			ErrorCheck("Server", err)
 			// Sessionが使われるまで待機
 			for {
 				buf := make([]byte, 128)
-				n, _ := proxy.Read(buf)
-				if string(buf[:n]) == "Next" {
+				n, err := proxyConn.Read(buf)
+				if string(buf[:n]) == "Next" || err == io.EOF {
 					break
+				}
+				if err != nil {
+					ErrorCheck("Proxy failed", err)
 				}
 			}
 			// Proxy Sesison <=> Server Sesison を接続
-			go copyIO(proxy, server)
-			go copyIO(server, proxy)
+			PrintInfo(fmt.Sprintf("Connect Session %s <=> %s", proxyConn.RemoteAddr(), serverConn.RemoteAddr()))
+			go copyIO(proxyConn, serverConn)
+			go copyIO(serverConn, proxyConn)
 		}
 	case "Proxy":
 		// ServerからのSesison Trigger 作成
