@@ -37,7 +37,7 @@ func main() {
 			for {
 				PrintInfo(fmt.Sprintf("Dial Up to Proxy: \"%s\"", settings.ProxyGlobalAddress))
 				proxyConn, err = net.Dial(settings.UseProtcol, settings.ProxyGlobalAddress)
-				if !ErrorCheck("Proxy", err) {
+				if !isError("Proxy", err) {
 					break
 				}
 				time.Sleep(1 * time.Second)
@@ -46,7 +46,7 @@ func main() {
 			for {
 				PrintInfo(fmt.Sprintf("Dial Up to Server: \"%s\"", settings.ServerLocalAddress))
 				serverConn, err = net.Dial(settings.UseProtcol, settings.ServerLocalAddress)
-				if !ErrorCheck("Server", err) {
+				if !isError("Server", err) {
 					break
 				}
 				time.Sleep(1 * time.Second)
@@ -59,7 +59,7 @@ func main() {
 					break
 				}
 				if err != nil {
-					ErrorCheck("Proxy failed", err)
+					isError("Proxy failed", err)
 				}
 			}
 			// Proxy Sesison <=> Server Sesison を接続
@@ -70,21 +70,21 @@ func main() {
 	case "Proxy":
 		// ServerからのSesison Trigger 作成
 		server, err := net.Listen(settings.UseProtcol, settings.ProxyListen)
-		ErrorCheck("Server", err)
+		isError("Server", err)
 		PrintInfo(fmt.Sprintf("Listen Server Session: \"%s\"", settings.ProxyListen))
 		// ClientからのSession Trigger 作成
 		client, err := net.Listen(settings.UseProtcol, settings.ClientListen)
-		ErrorCheck("Client", err)
+		isError("Client", err)
 		PrintInfo(fmt.Sprintf("Listen Client Session: \"%s\"", settings.ClientListen))
 		// 複数 Session 生成できるように Loop
 		for {
 			// Server との Session を待機
 			serverConn, err := server.Accept()
-			ErrorCheck("Server", err)
+			isError("Server", err)
 			PrintInfo(fmt.Sprintf("Connected Server: \"%s\"", serverConn.RemoteAddr()))
 			// Client との Session を待機
 			clientConn, err := client.Accept()
-			ErrorCheck("Client", err)
+			isError("Client", err)
 			PrintInfo(fmt.Sprintf("Connected Client: \"%s\"", clientConn.RemoteAddr()))
 			// Session を使ったことを通知
 			serverConn.Write([]byte("Next"))
@@ -104,12 +104,12 @@ func copyIO(src, dest net.Conn) {
 	io.Copy(src, dest)
 }
 
-func ErrorCheck(host string, err error) (ok bool) {
+func isError(host string, err error) (ok bool) {
 	if err != nil {
 		log.Printf("[ERROR]: <%s> %s\n", host, err.Error())
-		return false
+		return true
 	}
-	return true
+	return false
 }
 
 func PrintInfo(message string) {
