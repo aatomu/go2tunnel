@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
+	"strings"
 	"time"
 )
 
@@ -94,7 +95,7 @@ func main() {
 			PrintInfo("Request New Session From Server")
 			time.Sleep(1 * time.Second)
 			// Client Session <=> Server Session を接続
-			PrintInfo(fmt.Sprintf("Connect Session %s <=> %s", serverConn.RemoteAddr(), clientConn.RemoteAddr()))
+			PrintInfo(fmt.Sprintf("Connect Session %s <=> %s (https://ipinfo.io/%s) ", serverConn.RemoteAddr(), clientConn.RemoteAddr(), strings.Split(clientConn.RemoteAddr().String(), ":")[0]))
 			go copyIO(serverConn, clientConn)
 			go copyIO(clientConn, serverConn)
 		}
