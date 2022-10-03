@@ -26,15 +26,21 @@ Server Proxy どっちを先に起動しても問題なし
 ## 動作
 ```mermaid
   sequenceDiagram
-    participant Client
+    autonumber
+    actor Client
+    Note over Client: Access<br>User
     participant Proxy
-    participant Server
-    Server->>Proxy: TCP request
+    participant ServerMacine
+    participant EndPoint
+    Note over EndPoint: ex)Minecraft Server<br>ARK Server
+    ServerMacine->>Proxy: TCP request
     Client->>Proxy: TCP/UDP request
     loop I/O to I/O
-      Proxy->>Server: Transfer Data (overTCP)
-      Server->>Proxy: 
-      Proxy->>Client: 
-      Client->>Proxy: 
+      Client->>Proxy: Transfer Data (TCP/UDP)
+      Proxy->>ServerMacine: Transfer Data (overTCP)
+      ServerMacine->>EndPoint: Transfer Data (TCP/UDP)
+      EndPoint->>ServerMacine: Transfer Data (TCP/UDP)
+      ServerMacine->>Proxy: Transfer Data (overTCP)
+      Proxy->>Client: Transfer Data (TCP/UDP)
     end
 ```
