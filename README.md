@@ -9,17 +9,32 @@ Server Proxy どっちを先に起動しても問題なし
 ## 変数 について
 ```json
 {
-  "comment":"使用するプロトコル tcp,tcp4,tcp6のみ",
-  "UseProtcol":"tcp4", 
-  "comment":" 実際のサーバーへアクセスするアドレス",
+  "comment":"転送するProtcol tcp/udpのみ",
+  "UseProtcol":"tcp", 
+  "comment":"サーバーへアクセスする際のアドレス",
   "ServerLocalAddress":"localhost:25565",
-  "comment":" プロキシと鯖を繋げる際に使うアドレス",
+  "comment":"Server=>ProxyのProxy Address",
   "ProxyGlobalAddress":"example.com:80",
-  "comment":" プロキシがListenするポート,ClientListenと異なること",
+  "comment":"Server=>ProxyのProxy Port",
   "ProxyListen":":80",
-  "comment":" クライアントがアクセスする際のポート,ProxyListenと異なること",
+  "comment":"Client=>ProxyのProxy Port",
   "ClientListen":":22",
   "comment":"ServerなのかProxyなのかを指定",
   "BootServer": "Server"
 }
+```
+## 動作
+```mermaid
+  sequenceDiagram
+    participant Client
+    participant Proxy
+    participant Server
+    Server->>Proxy: TCP request
+    Client->>Proxy: TCP/UDP request
+    loop I/O to I/O
+      Proxy->>Server: Transfar Data (overTCP)
+      Server->>Proxy: 
+      Proxy->>Client: 
+      Client->>Proxy: 
+    end
 ```

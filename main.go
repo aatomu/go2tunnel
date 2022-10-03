@@ -13,12 +13,12 @@ import (
 )
 
 type Settings struct {
-	UseProtcol         string `json:"UseProtcol"`
-	ServerLocalAddress string `json:"ServerLocalAddress"`
-	ProxyGlobalAddress string `json:"ProxyGlobalAddress"`
-	ProxyListen        string `json:"ProxyListen"`
-	ClientListen       string `json:"ClientListen"`
-	BootServer         string `json:"BootServer"`
+	TransfarProtcol string `json:"TransfarProtcol"`
+	ToServer        string `json:"ToServer"`
+	DialupToProxy   string `json:"DialupToProxy"`
+	ListenByServer  string `json:"ListenByServer"`
+	ListenByClient  string `json:"ListenByClient"`
+	BootType        string `json:"BootType"`
 }
 
 var (
@@ -31,7 +31,7 @@ func main() {
 	byteArray, _ := ioutil.ReadFile(*path)
 	json.Unmarshal(byteArray, &settings)
 	// 鯖ごとに分岐
-	switch settings.BootServer {
+	switch settings.BootType {
 	case "Server":
 		var err error
 		// 複数 Session 生成できるように Loop
@@ -39,8 +39,8 @@ func main() {
 			var proxyConn, serverConn net.Conn
 			// ProxyとのSesison作成
 			for {
-				PrintInfo(fmt.Sprintf("Dial Up to Proxy: \"%s\"", settings.ProxyGlobalAddress))
-				proxyConn, err = net.Dial(settings.UseProtcol, settings.ProxyGlobalAddress)
+				PrintInfo(fmt.Sprintf("Dial Up to Proxy: \"%s\"", settings.DialupToProxy))
+				proxyConn, err = net.Dial("tcp", settings.DialupToProxy)
 				if !isError("Proxy", err) {
 					break
 				}
@@ -48,8 +48,8 @@ func main() {
 			}
 			// ServerとのSesison作成
 			for {
-				PrintInfo(fmt.Sprintf("Dial Up to Server: \"%s\"", settings.ServerLocalAddress))
-				serverConn, err = net.Dial(settings.UseProtcol, settings.ServerLocalAddress)
+				PrintInfo(fmt.Sprintf("Dial Up to Server: \"%s\"", settings.ToServer))
+				serverConn, err = net.Dial(settings.TransfarProtcol, settings.ToServer)
 				if !isError("Server", err) {
 					break
 				}
@@ -73,31 +73,61 @@ func main() {
 		}
 	case "Proxy":
 		// ServerからのSesison Trigger 作成
-		server, err := net.Listen(settings.UseProtcol, settings.ProxyListen)
+		server, err := net.Listen("tcp", settings.ListenByServer)
 		isError("Server", err)
-		PrintInfo(fmt.Sprintf("Listen Server Session: \"%s\"", settings.ProxyListen))
+		PrintInfo(fmt.Sprintf("Listen Server Session: \"%s\"", settings.ListenByServer))
+		// Server との Session を待機
+		serverConn, err := server.Accept()
+		isError("Server", err)
+		PrintInfo(fmt.Sprintf("Connected Server: \"%s\"", serverConn.RemoteAddr()))
 		// ClientからのSession Trigger 作成
-		client, err := net.Listen(settings.UseProtcol, settings.ClientListen)
-		isError("Client", err)
-		PrintInfo(fmt.Sprintf("Listen Client Session: \"%s\"", settings.ClientListen))
-		// 複数 Session 生成できるように Loop
-		for {
-			// Server との Session を待機
-			serverConn, err := server.Accept()
-			isError("Server", err)
-			PrintInfo(fmt.Sprintf("Connected Server: \"%s\"", serverConn.RemoteAddr()))
-			// Client との Session を待機
-			clientConn, err := client.Accept()
+		switch settings.TransfarProtcol {
+		case "tcp":
+			client, err := net.Listen("tcp", settings.ListenByServer)
 			isError("Client", err)
-			PrintInfo(fmt.Sprintf("Connected Client: \"%s\"", clientConn.RemoteAddr()))
-			// Session を使ったことを通知
-			serverConn.Write([]byte("Next"))
-			PrintInfo("Request New Session From Server")
-			time.Sleep(1 * time.Second)
-			// Client Session <=> Server Session を接続
-			PrintInfo(fmt.Sprintf("Connect Session %s <=> %s (https://ipinfo.io/%s) ", serverConn.RemoteAddr(), clientConn.RemoteAddr(), strings.Split(clientConn.RemoteAddr().String(), ":")[0]))
-			go copyIO(serverConn, clientConn)
-			go copyIO(clientConn, serverConn)
+			PrintInfo(fmt.Sprintf("Listen Client Session: \"%s\"", settings.ListenByClient))
+			// 複数 Session 生成できるように Loop
+			for {
+				// Client との Session を待機
+				clientConn, err := client.Accept()
+				isError("Client", err)
+				PrintInfo(fmt.Sprintf("Connected Client: \"%s\"", clientConn.RemoteAddr()))
+				// Session を使ったことを通知
+				serverConn.Write([]byte("Next"))
+				PrintInfo("Request New Session From Server")
+				time.Sleep(1 * time.Second)
+				// Client Session <=> Server Session を接続
+				PrintInfo(fmt.Sprintf("Connect Session %s <=> %s (https://ipinfo.io/%s) ", serverConn.RemoteAddr(), clientConn.RemoteAddr(), strings.Split(clientConn.RemoteAddr().String(), ":")[0]))
+				// Server <=> Client
+				go copyIO(serverConn, clientConn)
+				go copyIO(clientConn, serverConn)
+			}
+		case "udp":
+			client, err := net.ListenPacket("udp", settings.ListenByClient)
+			isError("Client", err)
+			PrintInfo(fmt.Sprintf("Listen Client Session: \"%s\"", settings.ListenByClient))
+			// 複数 Session 生成できるように Loop
+			for {
+				b := make([]byte, 1024)
+				// Client との Session を待機
+				n, addr, err := client.ReadFrom(b)
+				isError("Client", err)
+				PrintInfo(fmt.Sprintf("Connected Client: \"%s\"", addr.String()))
+				// Session を使ったことを通知
+				serverConn.Write([]byte("Next"))
+				PrintInfo("Request New Session From Server")
+				time.Sleep(1 * time.Second)
+				// Client Session <=> Server Session を接続
+				PrintInfo(fmt.Sprintf("Connect Session %s <=> %s (https://ipinfo.io/%s) ", serverConn.RemoteAddr(), addr.String(), strings.Split(addr.String(), ":")[0]))
+				go func(bytes []byte, n int, addr net.Addr) {
+					for {
+						serverConn.Write(bytes[:n])
+						n, _ := serverConn.Read(bytes)
+						client.WriteTo(bytes[:n], addr)
+						n, addr, _ = client.ReadFrom(bytes[:n])
+					}
+				}(b, n, addr)
+			}
 		}
 	}
 }
