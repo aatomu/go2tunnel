@@ -13,7 +13,7 @@ import (
 )
 
 type Settings struct {
-	TransfarProtcol string `json:"TransfarProtcol"`
+	TransferProtcol string `json:"TransferProtcol"`
 	ToServer        string `json:"ToServer"`
 	DialupToProxy   string `json:"DialupToProxy"`
 	ListenByServer  string `json:"ListenByServer"`
@@ -49,7 +49,7 @@ func main() {
 			// ServerとのSesison作成
 			for {
 				PrintInfo(fmt.Sprintf("Dial Up to Server: \"%s\"", settings.ToServer))
-				serverConn, err = net.Dial(settings.TransfarProtcol, settings.ToServer)
+				serverConn, err = net.Dial(settings.TransferProtcol, settings.ToServer)
 				if !isError("Server", err) {
 					break
 				}
@@ -81,7 +81,7 @@ func main() {
 		isError("Server", err)
 		PrintInfo(fmt.Sprintf("Connected Server: \"%s\"", serverConn.RemoteAddr()))
 		// ClientからのSession Trigger 作成
-		switch settings.TransfarProtcol {
+		switch settings.TransferProtcol {
 		case "tcp":
 			client, err := net.Listen("tcp", settings.ListenByServer)
 			isError("Client", err)

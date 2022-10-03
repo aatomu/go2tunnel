@@ -9,18 +9,18 @@ Server Proxy どっちを先に起動しても問題なし
 ## 変数 について
 ```json
 {
-  "comment":"転送するProtcol tcp/udpのみ",
-  "UseProtcol":"tcp", 
-  "comment":"サーバーへアクセスする際のアドレス",
-  "ServerLocalAddress":"localhost:25565",
-  "comment":"Server=>ProxyのProxy Address",
-  "ProxyGlobalAddress":"example.com:80",
-  "comment":"Server=>ProxyのProxy Port",
-  "ProxyListen":":80",
-  "comment":"Client=>ProxyのProxy Port",
-  "ClientListen":":22",
-  "comment":"ServerなのかProxyなのかを指定",
-  "BootServer": "Server"
+  "comment": "転送するProtcol tcp/udpのみ",
+  "TransferProtcol": "tcp", 
+  "comment": "サーバーへアクセスする際のアドレス",
+  "ToServer": "localhost:25565",
+  "comment": "Server=>ProxyのProxy Address",
+  "DialupToProxy": "example.com:80",
+  "comment": "Server=>ProxyのProxy Port",
+  "ListenByServer": ":80",
+  "comment": "Client=>ProxyのProxy Port",
+  "ListenByClient": ":22",
+  "comment": "ServerなのかProxyなのかを指定",
+  "BootType": "Server"
 }
 ```
 ## 動作
@@ -32,7 +32,7 @@ Server Proxy どっちを先に起動しても問題なし
     Server->>Proxy: TCP request
     Client->>Proxy: TCP/UDP request
     loop I/O to I/O
-      Proxy->>Server: Transfar Data (overTCP)
+      Proxy->>Server: Transfer Data (overTCP)
       Server->>Proxy: 
       Proxy->>Client: 
       Client->>Proxy: 

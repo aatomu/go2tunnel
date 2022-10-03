@@ -1,5 +1,5 @@
 {
-  "TransfarProtcol":"tcp",
+  "TransferProtcol":"tcp",
   "ToServer":"localhost:80",
   "DialupToProxy":"example.com:8080",
   "ListenByServer":":8080",
