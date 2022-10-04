@@ -81,53 +81,24 @@ func main() {
 		isError("Server", err)
 		PrintInfo(fmt.Sprintf("Connected Server: \"%s\"", serverConn.RemoteAddr()))
 		// ClientからのSession Trigger 作成
-		switch settings.TransferProtcol {
-		case "tcp":
-			client, err := net.Listen("tcp", settings.ListenByServer)
+		client, err := net.Listen(settings.TransferProtcol, settings.ListenByServer)
+		isError("Client", err)
+		PrintInfo(fmt.Sprintf("Listen Client Session: \"%s\"", settings.ListenByClient))
+		// 複数 Session 生成できるように Loop
+		for {
+			// Client との Session を待機
+			clientConn, err := client.Accept()
 			isError("Client", err)
-			PrintInfo(fmt.Sprintf("Listen Client Session: \"%s\"", settings.ListenByClient))
-			// 複数 Session 生成できるように Loop
-			for {
-				// Client との Session を待機
-				clientConn, err := client.Accept()
-				isError("Client", err)
-				PrintInfo(fmt.Sprintf("Connected Client: \"%s\"", clientConn.RemoteAddr()))
-				// Session を使ったことを通知
-				serverConn.Write([]byte("Next"))
-				PrintInfo("Request New Session From Server")
-				time.Sleep(1 * time.Second)
-				// Client Session <=> Server Session を接続
-				PrintInfo(fmt.Sprintf("Connect Session %s <=> %s (https://ipinfo.io/%s) ", serverConn.RemoteAddr(), clientConn.RemoteAddr(), strings.Split(clientConn.RemoteAddr().String(), ":")[0]))
-				// Server <=> Client
-				go copyIO(serverConn, clientConn)
-				go copyIO(clientConn, serverConn)
-			}
-		case "udp":
-			client, err := net.ListenPacket("udp", settings.ListenByClient)
-			isError("Client", err)
-			PrintInfo(fmt.Sprintf("Listen Client Session: \"%s\"", settings.ListenByClient))
-			// 複数 Session 生成できるように Loop
-			for {
-				b := make([]byte, 1024)
-				// Client との Session を待機
-				n, addr, err := client.ReadFrom(b)
-				isError("Client", err)
-				PrintInfo(fmt.Sprintf("Connected Client: \"%s\"", addr.String()))
-				// Session を使ったことを通知
-				serverConn.Write([]byte("Next"))
-				PrintInfo("Request New Session From Server")
-				time.Sleep(1 * time.Second)
-				// Client Session <=> Server Session を接続
-				PrintInfo(fmt.Sprintf("Connect Session %s <=> %s (https://ipinfo.io/%s) ", serverConn.RemoteAddr(), addr.String(), strings.Split(addr.String(), ":")[0]))
-				go func(bytes []byte, n int, addr net.Addr) {
-					for {
-						serverConn.Write(bytes[:n])
-						n, _ := serverConn.Read(bytes)
-						client.WriteTo(bytes[:n], addr)
-						n, addr, _ = client.ReadFrom(bytes[:n])
-					}
-				}(b, n, addr)
-			}
+			PrintInfo(fmt.Sprintf("Connected Client: \"%s\"", clientConn.RemoteAddr()))
+			// Session を使ったことを通知
+			serverConn.Write([]byte("Next"))
+			PrintInfo("Request New Session From Server")
+			time.Sleep(1 * time.Second)
+			// Client Session <=> Server Session を接続
+			PrintInfo(fmt.Sprintf("Connect Session %s <=> %s (https://ipinfo.io/%s) ", serverConn.RemoteAddr(), clientConn.RemoteAddr(), strings.Split(clientConn.RemoteAddr().String(), ":")[0]))
+			// Server <=> Client
+			go copyIO(serverConn, clientConn)
+			go copyIO(clientConn, serverConn)
 		}
 	}
 }
