@@ -9,8 +9,6 @@ Server Proxy どっちを先に起動しても問題なし
 ## 変数 について
 ```json
 {
-  "comment": "転送するProtcol tcp/tcp4/tcp6のみ",
-  "TransferProtcol": "tcp", 
   "comment": "サーバーへアクセスする際のアドレス",
   "ToServer": "localhost:25565",
   "comment": "Server=>ProxyのProxy Address",

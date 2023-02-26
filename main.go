@@ -13,17 +13,17 @@ import (
 )
 
 type Settings struct {
-	TransferProtcol string `json:"TransferProtcol"`
-	ToServer        string `json:"ToServer"`
-	DialupToProxy   string `json:"DialupToProxy"`
-	ListenByServer  string `json:"ListenByServer"`
-	ListenByClient  string `json:"ListenByClient"`
-	BootType        string `json:"BootType"`
+	ToServer       string `json:"ToServer"`
+	DialupToProxy  string `json:"DialupToProxy"`
+	ListenByServer string `json:"ListenByServer"`
+	ListenByClient string `json:"ListenByClient"`
+	BootType       string `json:"BootType"`
 }
 
 var (
 	path     = flag.String("env", "./example.json", "flags")
 	settings Settings
+	dialer   = net.Dialer{Timeout: 30 * time.Second}
 )
 
 func main() {
@@ -33,6 +33,15 @@ func main() {
 	// 鯖ごとに分岐
 	switch settings.BootType {
 	case "Server":
+		if settings.DialupToProxy == "" {
+			isError("Server", fmt.Errorf("failed get proxy"))
+			return
+		}
+		if settings.ToServer == "" {
+			isError("Server", fmt.Errorf("failed get server"))
+			return
+		}
+
 		var err error
 		// 複数 Session 生成できるように Loop
 		for {
@@ -40,7 +49,7 @@ func main() {
 			// ProxyとのSesison作成
 			for {
 				PrintInfo(fmt.Sprintf("Dial Up to Proxy: \"%s\"", settings.DialupToProxy))
-				proxyConn, err = net.Dial("tcp", settings.DialupToProxy)
+				proxyConn, err = dialer.Dial("tcp", settings.DialupToProxy)
 				if !isError("Proxy", err) {
 					break
 				}
@@ -50,7 +59,7 @@ func main() {
 			// ServerとのSesison作成
 			for {
 				PrintInfo(fmt.Sprintf("Dial Up to Server: \"%s\"", settings.ToServer))
-				serverConn, err = net.Dial(settings.TransferProtcol, settings.ToServer)
+				serverConn, err = dialer.Dial("tcp", settings.ToServer)
 				if !isError("Server", err) {
 					break
 				}
@@ -75,13 +84,22 @@ func main() {
 			go copyIO(serverConn, proxyConn, true)
 		}
 	case "Proxy":
+		if settings.ListenByServer == "" {
+			isError("Server", fmt.Errorf("failed get server"))
+			return
+		}
+		if settings.ListenByClient == "" {
+			isError("Server", fmt.Errorf("failed get client"))
+			return
+		}
+
 		// ServerからのSesison Trigger 作成
 		server, err := net.Listen("tcp", settings.ListenByServer)
 		isError("Server", err)
 		PrintInfo(fmt.Sprintf("Listen Server Session: \"%s\"", settings.ListenByServer))
 
 		// ClientからのSession Trigger 作成
-		client, err := net.Listen(settings.TransferProtcol, settings.ListenByClient)
+		client, err := net.Listen("tcp", settings.ListenByClient)
 		isError("Client", err)
 		PrintInfo(fmt.Sprintf("Listen Client Session: \"%s\"", settings.ListenByClient))
 
