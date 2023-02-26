@@ -79,10 +79,6 @@ func main() {
 		server, err := net.Listen("tcp", settings.ListenByServer)
 		isError("Server", err)
 		PrintInfo(fmt.Sprintf("Listen Server Session: \"%s\"", settings.ListenByServer))
-		// Server との Session を待機
-		serverConn, err := server.Accept()
-		isError("Server", err)
-		PrintInfo(fmt.Sprintf("Connected Server: \"%s\"", serverConn.RemoteAddr()))
 
 		// ClientからのSession Trigger 作成
 		client, err := net.Listen(settings.TransferProtcol, settings.ListenByClient)
@@ -91,6 +87,11 @@ func main() {
 
 		// 複数 Session 生成できるように Loop
 		for {
+			// Server との Session を待機
+			serverConn, err := server.Accept()
+			isError("Server", err)
+			PrintInfo(fmt.Sprintf("Connected Server: \"%s\"", serverConn.RemoteAddr()))
+
 			// Client との Session を待機
 			clientConn, err := client.Accept()
 			isError("Client", err)
