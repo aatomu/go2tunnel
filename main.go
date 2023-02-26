@@ -46,6 +46,7 @@ func main() {
 				}
 				time.Sleep(1 * time.Second)
 			}
+
 			// ServerとのSesison作成
 			for {
 				PrintInfo(fmt.Sprintf("Dial Up to Server: \"%s\"", settings.ToServer))
@@ -55,6 +56,7 @@ func main() {
 				}
 				time.Sleep(5 * time.Second)
 			}
+
 			// Sessionが使われるまで待機
 			for {
 				buf := make([]byte, 8)
@@ -66,6 +68,7 @@ func main() {
 					isError("Proxy failed", err)
 				}
 			}
+
 			// Proxy Sesison <=> Server Sesison を接続
 			PrintInfo(fmt.Sprintf("Connect Session %s <=> %s", proxyConn.RemoteAddr(), serverConn.RemoteAddr()))
 			go copyIO(proxyConn, serverConn, false)
@@ -80,20 +83,24 @@ func main() {
 		serverConn, err := server.Accept()
 		isError("Server", err)
 		PrintInfo(fmt.Sprintf("Connected Server: \"%s\"", serverConn.RemoteAddr()))
+
 		// ClientからのSession Trigger 作成
 		client, err := net.Listen(settings.TransferProtcol, settings.ListenByClient)
 		isError("Client", err)
 		PrintInfo(fmt.Sprintf("Listen Client Session: \"%s\"", settings.ListenByClient))
+
 		// 複数 Session 生成できるように Loop
 		for {
 			// Client との Session を待機
 			clientConn, err := client.Accept()
 			isError("Client", err)
 			PrintInfo(fmt.Sprintf("Connected Client: \"%s\"", clientConn.RemoteAddr()))
+
 			// Session を使ったことを通知
 			serverConn.Write([]byte("Next"))
 			PrintInfo("Request New Session From Server")
 			time.Sleep(1 * time.Second)
+
 			// Client Session <=> Server Session を接続
 			PrintInfo(fmt.Sprintf("Connect Session %s <=> %s (https://ipinfo.io/%s) ", serverConn.RemoteAddr(), clientConn.RemoteAddr(), strings.Split(clientConn.RemoteAddr().String(), ":")[0]))
 			// Server <=> Client
@@ -106,14 +113,12 @@ func main() {
 func copyIO(src, dest net.Conn, shouldClose bool) {
 	defer func() {
 		if shouldClose {
+			time.Sleep(10 * time.Second)
+			PrintInfo(fmt.Sprintf("Close Session %s <=> %s", src.RemoteAddr(), dest.RemoteAddr()))
 			err := src.Close()
-			if err != nil {
-				PrintInfo(fmt.Sprintf("Session Closed: \"%s\"", src.RemoteAddr()))
-			}
+			isError("IOcopy", err)
 			err = dest.Close()
-			if err != nil {
-				PrintInfo(fmt.Sprintf("Session Closed: \"%s\"", dest.RemoteAddr()))
-			}
+			isError("IOcopy", err)
 		}
 	}()
 	io.Copy(src, dest)
