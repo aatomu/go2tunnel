@@ -68,8 +68,8 @@ func main() {
 			}
 			// Proxy Sesison <=> Server Sesison を接続
 			PrintInfo(fmt.Sprintf("Connect Session %s <=> %s", proxyConn.RemoteAddr(), serverConn.RemoteAddr()))
-			go copyIO(proxyConn, serverConn)
-			go copyIO(serverConn, proxyConn)
+			go copyIO(proxyConn, serverConn, false)
+			go copyIO(serverConn, proxyConn, true)
 		}
 	case "Proxy":
 		// ServerからのSesison Trigger 作成
@@ -81,7 +81,7 @@ func main() {
 		isError("Server", err)
 		PrintInfo(fmt.Sprintf("Connected Server: \"%s\"", serverConn.RemoteAddr()))
 		// ClientからのSession Trigger 作成
-		client, err := net.Listen(settings.TransferProtcol, settings.ListenByServer)
+		client, err := net.Listen(settings.TransferProtcol, settings.ListenByClient)
 		isError("Client", err)
 		PrintInfo(fmt.Sprintf("Listen Client Session: \"%s\"", settings.ListenByClient))
 		// 複数 Session 生成できるように Loop
@@ -97,21 +97,23 @@ func main() {
 			// Client Session <=> Server Session を接続
 			PrintInfo(fmt.Sprintf("Connect Session %s <=> %s (https://ipinfo.io/%s) ", serverConn.RemoteAddr(), clientConn.RemoteAddr(), strings.Split(clientConn.RemoteAddr().String(), ":")[0]))
 			// Server <=> Client
-			go copyIO(serverConn, clientConn)
-			go copyIO(clientConn, serverConn)
+			go copyIO(serverConn, clientConn, false)
+			go copyIO(clientConn, serverConn, true)
 		}
 	}
 }
 
-func copyIO(src, dest net.Conn) {
+func copyIO(src, dest net.Conn, shouldClose bool) {
 	defer func() {
-		err := src.Close()
-		if err != nil {
-			PrintInfo(fmt.Sprintf("Session Closed: \"%s\"", src.RemoteAddr()))
-		}
-		err = dest.Close()
-		if err != nil {
-			PrintInfo(fmt.Sprintf("Session Closed: \"%s\"", dest.RemoteAddr()))
+		if shouldClose {
+			err := src.Close()
+			if err != nil {
+				PrintInfo(fmt.Sprintf("Session Closed: \"%s\"", src.RemoteAddr()))
+			}
+			err = dest.Close()
+			if err != nil {
+				PrintInfo(fmt.Sprintf("Session Closed: \"%s\"", dest.RemoteAddr()))
+			}
 		}
 	}()
 	io.Copy(src, dest)
