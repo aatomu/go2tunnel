@@ -111,7 +111,8 @@ func main() {
 			PrintInfo(fmt.Sprintf("Catch Client: \"%s\"", clientConn.RemoteAddr()))
 
 			// Session を使ったことを通知
-			serverConn.Write([]byte("Next"))
+			_, err = serverConn.Write([]byte("Next"))
+			isError("Server", err)
 			time.Sleep(1 * time.Second)
 
 			// Client Session <=> Server Session を接続
