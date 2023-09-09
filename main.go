@@ -5,9 +5,9 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net"
+	"os"
 	"strings"
 	"time"
 )
@@ -28,7 +28,7 @@ var (
 
 func main() {
 	flag.Parse()
-	byteArray, _ := ioutil.ReadFile(*path)
+	byteArray, _ := os.ReadFile(*path)
 	json.Unmarshal(byteArray, &settings)
 	// 鯖ごとに分岐
 	switch settings.BootType {
